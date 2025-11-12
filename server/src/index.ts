@@ -19,9 +19,18 @@ const app = express()
 
 const initializeApp = async (): Promise<void> => {
   try {
+    console.log('🚀 Starting Vibe Code server initialization...')
+    console.log(`📊 Environment: ${serverConfig.nodeEnv}`)
+    console.log(`🔧 Port: ${serverConfig.port}`)
+    
     validateConfig()
+    console.log('✅ Configuration validated')
+    
     await connectDatabase()
+    console.log('✅ Database connected')
+    
     await createAIResponseTable()
+    console.log('✅ Database tables created')
     
     app.use(helmet({
       contentSecurityPolicy: {
@@ -46,10 +55,23 @@ const initializeApp = async (): Promise<void> => {
     app.use(express.json({ limit: '10mb' }))
     app.use(express.urlencoded({ extended: true, limit: '10mb' }))
     
+    console.log('📡 Setting up routes...')
     app.use('/api', routes)
+    console.log('✅ API routes configured')
+    
+    // Test endpoint to verify server is responding
+    app.get('/test', (_req, res) => {
+      res.json({ 
+        message: 'Server is running!', 
+        timestamp: new Date().toISOString(),
+        nodeEnv: serverConfig.nodeEnv,
+        port: serverConfig.port
+      })
+    })
     
     // Serve static files in production
     if (serverConfig.nodeEnv === 'production') {
+      console.log('🏗️  Configuring production static file serving...')
       // In Docker, client files are at /app/client/dist
       const clientDistPath = path.join(__dirname, '..', '..', 'client', 'dist')
       
@@ -58,6 +80,7 @@ const initializeApp = async (): Promise<void> => {
       
       // Serve static files first
       app.use(express.static(clientDistPath))
+      console.log('✅ Static file middleware configured')
       
       // Health check for static files
       app.get('/health-static', (_req, res) => {
@@ -73,6 +96,7 @@ const initializeApp = async (): Promise<void> => {
       
       // Serve index.html for all other routes (SPA support) - must be after static files
       app.get('*', (_req, res) => {
+        console.log(`🌐 SPA route hit: ${_req.url}`)
         const indexPath = path.join(clientDistPath, 'index.html')
         if (require('fs').existsSync(indexPath)) {
           res.sendFile(indexPath)
@@ -84,6 +108,7 @@ const initializeApp = async (): Promise<void> => {
           })
         }
       })
+      console.log('✅ Production routes configured')
     } else {
       // Development mode - API only
       app.get('/', (_req, res) => {
