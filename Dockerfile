@@ -49,6 +49,9 @@ COPY --from=client-builder --chown=nodejs:nodejs /app/client/dist ./client/dist
 COPY --from=server-builder --chown=nodejs:nodejs /app/server/dist ./server/dist
 COPY --from=server-builder --chown=nodejs:nodejs /app/server/package*.json ./server/
 
+# Copy the simplified server entry point
+COPY --from=server-builder --chown=nodejs:nodejs /app/server/src/index-simple.ts ./server/dist/index-simple.js
+
 # Switch to server directory and install production dependencies only
 WORKDIR /app/server
 RUN npm ci --only=production && npm cache clean --force
@@ -67,4 +70,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3001/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"
 
 # Start the application
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/index-simple.js"]
