@@ -50,12 +50,39 @@ const initializeApp = async (): Promise<void> => {
     
     // Serve static files in production
     if (serverConfig.nodeEnv === 'production') {
-      const clientDistPath = path.join(__dirname, '..', 'client', 'dist')
+      // In Docker, client files are at /app/client/dist
+      const clientDistPath = path.join(__dirname, '..', '..', 'client', 'dist')
+      
+      console.log(`📁 Serving static files from: ${clientDistPath}`)
+      console.log(`📁 Directory exists: ${require('fs').existsSync(clientDistPath)}`)
+      
+      // Serve static files first
       app.use(express.static(clientDistPath))
       
-      // Serve index.html for all other routes (SPA support)
+      // Health check for static files
+      app.get('/health-static', (_req, res) => {
+        const fs = require('fs')
+        const indexPath = path.join(clientDistPath, 'index.html')
+        res.json({
+          clientPath: clientDistPath,
+          exists: fs.existsSync(clientDistPath),
+          indexExists: fs.existsSync(indexPath),
+          files: fs.existsSync(clientDistPath) ? fs.readdirSync(clientDistPath) : []
+        })
+      })
+      
+      // Serve index.html for all other routes (SPA support) - must be after static files
       app.get('*', (_req, res) => {
-        res.sendFile(path.join(clientDistPath, 'index.html'))
+        const indexPath = path.join(clientDistPath, 'index.html')
+        if (require('fs').existsSync(indexPath)) {
+          res.sendFile(indexPath)
+        } else {
+          res.status(404).json({
+            error: 'Frontend not found',
+            message: 'Client build files not found. Please ensure the client was built successfully.',
+            path: indexPath
+          })
+        }
       })
     } else {
       // Development mode - API only
@@ -73,7 +100,10 @@ const initializeApp = async (): Promise<void> => {
       })
     }
     
-    app.use(notFoundHandler)
+    // Error handlers should be last, but notFoundHandler should be before SPA route in production
+    if (serverConfig.nodeEnv !== 'production') {
+      app.use(notFoundHandler)
+    }
     app.use(errorHandler)
     
     const PORT = serverConfig.port
