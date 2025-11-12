@@ -3,9 +3,12 @@ FROM node:18-alpine AS client-builder
 
 WORKDIR /app/client
 
+# Set development environment for build
+ENV NODE_ENV=development
+
 # Copy package files
 COPY client/package*.json ./
-RUN npm ci --include=dev
+RUN npm ci
 
 # Copy client source code
 COPY client/ ./
@@ -16,9 +19,12 @@ FROM node:18-alpine AS server-builder
 
 WORKDIR /app/server
 
+# Set development environment for build
+ENV NODE_ENV=development
+
 # Copy package files
 COPY server/package*.json ./
-RUN npm ci --include=dev
+RUN npm ci
 
 # Copy server source code
 COPY server/ ./
@@ -43,12 +49,15 @@ COPY --from=client-builder --chown=nodejs:nodejs /app/client/dist ./client/dist
 COPY --from=server-builder --chown=nodejs:nodejs /app/server/dist ./server/dist
 COPY --from=server-builder --chown=nodejs:nodejs /app/server/package*.json ./server/
 
-# Install production dependencies only
+# Switch to server directory and install production dependencies only
 WORKDIR /app/server
 RUN npm ci --only=production && npm cache clean --force
 
 # Switch to non-root user
 USER nodejs
+
+# Set production environment for runtime
+ENV NODE_ENV=production
 
 # Expose port
 EXPOSE 3001
