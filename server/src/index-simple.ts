@@ -5,6 +5,7 @@ import compression from 'compression'
 import morgan from 'morgan'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { GoogleGenAI } from '@google/genai'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -13,6 +14,17 @@ const app = express()
 const PORT = process.env['PORT'] || 3001
 const NODE_ENV = process.env['NODE_ENV'] || 'development'
 const GEMINI_API_KEY = process.env['GEMINI_API_KEY'] || ''
+
+// Initialize Gemini AI client
+let genAI: GoogleGenAI | null = null
+if (GEMINI_API_KEY) {
+  try {
+    genAI = new GoogleGenAI({ apiKey: GEMINI_API_KEY })
+    console.log('✅ Gemini AI client initialized successfully')
+  } catch (error) {
+    console.error('❌ Failed to initialize Gemini AI:', error)
+  }
+}
 
 console.log('🚀 Starting Vibe Code server...')
 console.log(`📊 Environment: ${NODE_ENV}`)
@@ -59,11 +71,11 @@ app.get('/api/health', (_req, res) => {
 app.post('/api/ai/generate', async (req, res) => {
   console.log('📡 AI generate endpoint hit!')
   
-  if (!GEMINI_API_KEY) {
+  if (!genAI) {
     return res.status(503).json({
       success: false,
       error: 'Gemini API key not configured',
-      message: 'AI features are currently disabled'
+      message: 'AI features are currently disabled. Please configure GEMINI_API_KEY.'
     })
   }
 
@@ -77,19 +89,37 @@ app.post('/api/ai/generate', async (req, res) => {
       })
     }
 
-    // Simple mock response for now
+    console.log(`🤖 Generating AI response for prompt: "${prompt.substring(0, 100)}..."`)
+    
+    // Create context-aware prompt
+    const fullPrompt = context 
+      ? `Context: ${context}\n\nUser Request: ${prompt}`
+      : prompt
+
+    // Generate content using Gemini AI
+    const result = await genAI.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: fullPrompt
+    })
+
+    const responseText = result.text || 'No response generated'
+
+    console.log('✅ AI response generated successfully')
+
     const response = {
       success: true,
       data: {
-        response: `This is a mock AI response to: "${prompt}". In a real deployment with proper Gemini API key, this would be an actual AI-generated response.`,
+        response: responseText,
         model: 'gemini-2.5-flash',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        prompt: prompt,
+        context: context || null
       }
     }
 
     res.json(response)
   } catch (error) {
-    console.error('AI generation error:', error)
+    console.error('❌ AI generation error:', error)
     res.status(500).json({
       success: false,
       error: 'Failed to generate AI response',
