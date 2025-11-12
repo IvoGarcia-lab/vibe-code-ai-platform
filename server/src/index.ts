@@ -22,6 +22,8 @@ const initializeApp = async (): Promise<void> => {
     console.log('🚀 Starting Vibe Code server initialization...')
     console.log(`📊 Environment: ${serverConfig.nodeEnv}`)
     console.log(`🔧 Port: ${serverConfig.port}`)
+    console.log(`🔑 GEMINI_API_KEY available: ${!!serverConfig.geminiApiKey}`)
+    console.log(`🌍 CORS Origin: ${serverConfig.corsOrigin}`)
     
     validateConfig()
     console.log('✅ Configuration validated')
