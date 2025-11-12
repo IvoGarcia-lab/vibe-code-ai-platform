@@ -5,7 +5,7 @@ WORKDIR /app/client
 
 # Copy package files
 COPY client/package*.json ./
-RUN npm ci
+RUN npm ci --include=dev
 
 # Copy client source code
 COPY client/ ./
@@ -18,7 +18,7 @@ WORKDIR /app/server
 
 # Copy package files
 COPY server/package*.json ./
-RUN npm ci
+RUN npm ci --include=dev
 
 # Copy server source code
 COPY server/ ./
