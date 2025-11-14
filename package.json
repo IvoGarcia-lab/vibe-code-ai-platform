@@ -1,22 +1,25 @@
 {
-  "name": "vibe-code",
+  "name": "vibe-code-platform",
   "version": "1.0.0",
-  "description": "Modern AI platform for creatives - Vibe Code",
+  "description": "Vibe Code AI Platform - Creative AI Content Generation",
   "main": "index.js",
   "scripts": {
-    "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
-    "server:dev": "cd server && npm run dev",
-    "client:dev": "cd client && npm run dev",
-    "build": "npm run client:build && npm run server:build",
-    "client:build": "cd client && npm run build",
-    "server:build": "cd server && npm run build",
-    "start": "cd server && npm start",
-    "install:all": "npm install && cd client && npm install && cd ../server && npm install",
-    "docker:build": "docker build -t vibe-code .",
-    "docker:run": "docker-compose up -d",
-    "docker:stop": "docker-compose down"
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "cd client && npm run build",
+    "build:server": "cd server && npm run build",
+    "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\"",
+    "dev:client": "cd client && npm run dev",
+    "dev:server": "cd server && npm run dev",
+    "start": "cd server && npm start"
   },
-  "keywords": ["ai", "creativity", "gemini", "react", "nodejs", "postgresql"],
+  "keywords": [
+    "ai",
+    "creative",
+    "content-generation",
+    "react",
+    "nodejs",
+    "gemini-api"
+  ],
   "author": "Vibe Code Team",
   "license": "MIT",
   "devDependencies": {
