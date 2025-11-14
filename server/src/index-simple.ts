@@ -68,25 +68,27 @@ app.get('/api/health', (_req, res) => {
 })
 
 // Simple AI endpoint (without database)
-app.post('/api/ai/generate', async (req, res) => {
+app.post('/api/ai/generate', async (req, res): Promise<void> => {
   console.log('📡 AI generate endpoint hit!')
   
   if (!genAI) {
-    return res.status(503).json({
+    res.status(503).json({
       success: false,
       error: 'Gemini API key not configured',
       message: 'AI features are currently disabled. Please configure GEMINI_API_KEY.'
     })
+    return
   }
 
   try {
     const { prompt, context } = req.body
     
     if (!prompt) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Prompt is required'
       })
+      return
     }
 
     console.log(`🤖 Generating AI response for prompt: "${prompt.substring(0, 100)}..."`)

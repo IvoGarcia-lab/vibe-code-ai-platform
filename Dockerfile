@@ -12,6 +12,8 @@ RUN npm ci
 
 # Copy client source code
 COPY client/ ./
+
+# Build client with production optimizations
 RUN npm run build
 
 # Build stage for server
